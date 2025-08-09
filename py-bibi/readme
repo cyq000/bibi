@@ -1,0 +1,10 @@
+
+最新标记价格和资金费率
+https://fapi.binance.com/fapi/v1/premiumIndex?symbol=KAITOUSDT
+
+最新价格V2
+https://fapi.binance.com/fapi/v2/ticker/price?symbol=KAITOUSDT
+
+连续合约K线数据
+https://fapi.binance.com/fapi/v1/continuousKlines?pair=GOATUSDT&contractType=PERPETUAL&interval=15m&limit=5
+
