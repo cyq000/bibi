@@ -1,0 +1,17 @@
+#####
+
+###
+程序功能：监控山寨币
+：15分钟、2小时级别的增长
+###
+test.py：   主程序
+feishu_bot.py:  负责发送消息到飞书群
+###
+check_status.sh:    检查程序是否在运行中
+run_in_background.sh：  程序运行脚本
+###
+output.log：    程序日志
+pid.pid：   程序运行时id
+###
+
+#####
