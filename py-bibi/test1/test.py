@@ -527,11 +527,11 @@ def get_long_short_ratios(symbol):
             # logging.info(content) # print(f"{symbol} 符合条件3: prinf_info:{prinf_info3}")    
             ret = True
         
-        # 检查当前 K 线收盘价是否较前 4 条 K 线中任意一条上涨超过 7%    
+        # 检查当前 K 线收盘价是否较前 4 条 K 线中任意一条上涨超过 9%    
         if bool_increase :
             quoteVolume = get_24h_quote_volume(symbol)
             quoteVolume = quoteVolume / 10000 
-            # ret = True
+            ret = True
         
         if ret:
             lines = build_symbol_metrics_lines(
@@ -612,6 +612,11 @@ signal.signal(signal.SIGINT, signal_handler)
 
 # 主函数
 def main():
+    # 获取符合条件的币种
+    symbols = get_symbols()
+    # print(f"符合条件的高流动性币种（200 万美元 < 24 小时成交额 < 8000 万美元）：{len(symbols)} 个")
+    logging.info(f"符合条件的高流动性币种（300 万美元 < 24 小时成交额 < 6000 万美元）：{len(symbols)} 个")
+    
     print_title = f"<1号监控机>"
     print_time = time_interval/3600
     print_min_24h_volume = min_24h_volume/10000
@@ -619,7 +624,7 @@ def main():
         f"📌 **<1号监控机>**",
         f"📌 **监控范围:**  币安所有合约币种",
         f"📌 **监控条件:**",
-        f"📌 1.币种24小时成交额 >: **{print_min_24h_volume}.万** USDT",
+        f"📌 1.币种24小时成交额 >: **{print_min_24h_volume}.万** USDT,{len(symbols)} 个",
         f"📌 2.每 **{print_time}** 小时循环获取数据.",
         f"📌 3.检查 **15分钟级别** K线收盘价是否较前 4 条 K 线中任意一条上涨超过 **7%**.",
         f"📌 4.符合条件打印过的币种,3小时内不再打印,避免刷屏."
@@ -631,12 +636,6 @@ def main():
         content = content
         )
     logging.info(content) # print(f"{symbol} 符合条件3: prinf_info:{prinf_info3}")    
-    
-    
-    # 获取符合条件的币种
-    symbols = get_symbols()
-    # print(f"符合条件的高流动性币种（200 万美元 < 24 小时成交额 < 8000 万美元）：{len(symbols)} 个")
-    logging.info(f"符合条件的高流动性币种（300 万美元 < 24 小时成交额 < 6000 万美元）：{len(symbols)} 个")
         
     divided_symbols = divide_symbols(symbols, num_threads)
     printed_symbols_list = [defaultdict(float) for _ in range(num_threads)]
