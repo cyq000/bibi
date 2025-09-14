@@ -1,0 +1,9 @@
+sudo apt install g++ libcurl4-openssl-dev nlohmann-json3-dev
+g++ -std=c++11 -O2 monitor.cpp -lcurl -lpthread -o monitor_cpp11
+./monitor
+
+
+mkdir -p build
+cd build
+cmake ..
+make
