@@ -143,11 +143,13 @@ ConditionResult BinanceAPI::checkCondition1(const std::string& symbol) {
         result.triggered = true;
         result.avgOI = avg;
         result.lastOI = getDoubleSafe(data.back(), "sumOpenInterest");
-        result.percentDiff = (result.lastOI - avg) / avg;
+        result.percentDiff = (result.lastOI - avg) / avg; 
+        result.triggerTime = std::time(nullptr);// 记录当前时间
 
-        // LOG_INFO("Condition1 (" + symbol + "): 满足 ✅ lastOI=" +
-        //          std::to_string(result.lastOI) +
-        //          " percentDiff=" + std::to_string(result.percentDiff * 100) + "%");
+        // char buf[64];
+        // std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", std::localtime(&result.triggerTime));
+        // LOG_INFO("Condition1 (" + symbol + "): 满足 ✅ lastOI=" + std::to_string(result.lastOI) +
+        //          " percentDiff=" + std::to_string(result.percentDiff * 100) + "%" + " time=" + std::string(buf));
 
         return result;
 

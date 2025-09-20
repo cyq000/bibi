@@ -24,7 +24,7 @@ int main() {
 
     // 无限运行
     while (true) {
-        std::this_thread::sleep_for(std::chrono::seconds(3600)); // 每 100 秒做一次循环
+        std::this_thread::sleep_for(std::chrono::seconds(21600)); // 每 6小时 做一次循环
         // 可以在这里添加周期性的日志或状态输出
         LOG_INFO("监控程序仍在运行...");
         std::cout.flush();

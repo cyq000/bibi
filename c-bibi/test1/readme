@@ -1,9 +1,26 @@
+#####
+##编译
 sudo apt install g++ libcurl4-openssl-dev nlohmann-json3-dev
 g++ -std=c++11 -O2 monitor.cpp -lcurl -lpthread -o monitor_cpp11
-./monitor
-
-
 mkdir -p build
 cd build
 cmake ..
 make
+###
+
+###
+##运行
+./monitor.sh start
+./monitor.sh stop
+./monitor.sh restart
+./monitor.sh status
+###
+
+###
+20250919
+条件1：2小时级别，持仓量稳定
+条件2：5分钟级别，持仓量明显增加
+
+条件3：12小时、1天级别的 合约持仓量稳步提升、
+
+###

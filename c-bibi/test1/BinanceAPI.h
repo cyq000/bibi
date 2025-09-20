@@ -11,6 +11,7 @@ struct ConditionResult {
     double avgOI;        // 前3根平均持仓量
     double lastOI;       // 最新持仓量
     double percentDiff;  // 相差百分比
+    std::time_t triggerTime; // 条件触发时间 (秒级时间戳)
 };
 
 class BinanceAPI {
