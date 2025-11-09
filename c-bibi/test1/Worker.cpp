@@ -10,10 +10,10 @@ Worker::Worker(BinanceAPI& api) : api_(api) {}
 void Worker::start(int numThreads) {
     stop_ = false;
 
-    // Step 1: 获取前提条件的币种
+    // 获取前提条件的币种
     universe_ = api_.getSymbolsWithVolume(50000000, 6000000000);    // 5千万到60亿
 
-    // Step 1: 获取前提条件的币种 (测试)
+    // 获取前提条件的币种 (测试)
     // universe_ = {"LTCUSDT", "XRPUSDT"};  // 固定测试数据
 
     LOG_INFO("初始化筛选出 " + std::to_string(universe_.size()) + " 个币种用于监控");
@@ -29,11 +29,17 @@ void Worker::start(int numThreads) {
         threads_.emplace_back(&Worker::condition1Worker, this, symbols, i);
     }
 
-    // Step 3: 启动条件2线程
+    // 启动条件2线程
     threads_.emplace_back(&Worker::condition2Worker, this);
 
-    // Step 4: 启动公共事务线程
+    // 启动公共事务线程
     threads_.emplace_back(&Worker::commonWorker, this);
+
+    // 获取前提条件的币种
+    universe_ = api_.getSymbolsWithVolume(30000000, 6000000000);    // 24小时合约持仓量 3000万到60亿
+    // 启动条件3线程
+
+    threads_.emplace_back(&Worker::condition3Worker, this, universe_);
 }
 
 void Worker::stop() {
@@ -50,6 +56,7 @@ void Worker::condition1Worker(std::vector<std::string> symbols, int id)
 
     while (!stop_) {
         for (auto& sym : symbols) {
+            if(sym == "币安人生USDT") continue;
             auto res = api_.checkCondition1(sym);
             if (res.triggered) {
                 std::lock_guard<std::mutex> lock(mu_);
@@ -118,5 +125,57 @@ void Worker::commonWorker() {
         }
 
         std::this_thread::sleep_for(std::chrono::hours(6));
+    }
+}
+
+void Worker::condition3Worker(std::vector<std::string> symbols)
+{
+    LOG_INFO("条件3线程启动,负责 " + std::to_string(symbols.size()) + " 个币种");
+
+    while (!stop_)
+    {
+        for (auto &sym : symbols)
+        {
+
+            std::lock_guard<std::mutex> lock(mu_3);
+            ConditionResult Cond_12h;
+            // Cond_12h.oiTrend12h.timeframe = "12h";
+            // // 获取 OI 数据
+            // std::vector<double> oi12h = api_.fetchOIHistory(sym, Cond_12h);
+            // // 分析1
+            // api_.analyzeOITrend(oi12h, Cond_12h);
+
+            // if (Cond_12h.oiTrend12h.isGrowing)
+            // {
+            //     // 打印日志
+            //     std::ostringstream msg;
+            //     msg << std::fixed << std::setprecision(1);  //只保留小数点后一位
+            //     msg << "[OITrend] " << sym
+            //         << " | 12h growing=" << Cond_12h.oiTrend12h.isGrowing
+            //         << " slope=" << Cond_12h.oiTrend12h.slope
+            //         << " growthRate=" << Cond_12h.oiTrend12h.growthRate << "%";
+            //     LOG_INFO(msg.str());
+            //     FeishuNotifier::instance().sendMessage(msg.str());
+            // }
+
+
+            auto data = api_.fetchOpenInterestData(sym, "12h", 10);
+            ConditionResult result = api_.evaluateStableOI(data);
+            if (result.triggered)
+            {
+                // 打印日志
+                std::ostringstream msg;
+                msg << std::fixed << std::setprecision(1);  //只保留小数点后一位
+                msg << "[Condition3] " << sym
+                    << " triggerTime=" << std::put_time(std::localtime(&result.triggerTime), "%F %T");
+
+                LOG_INFO(msg.str());
+                FeishuNotifier::instance().sendMessage(msg.str());
+            }
+
+        }
+
+        // 每10小时更新一次
+        std::this_thread::sleep_for(std::chrono::hours(10));
     }
 }
