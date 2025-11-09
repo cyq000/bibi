@@ -1,0 +1,116 @@
+
+
+一、模块关系概览图（逻辑架构）
+                    ┌───────────────────────┐
+                    │     config.json       │
+                    └──────────┬────────────┘
+                               │
+                               ▼
+                     ┌────────────────────┐
+                     │  TrendMonitor（主控）│
+                     └──────┬─────────────┘
+                            │ orchestrates
+ ┌──────────────────────────┼───────────────────────────┐
+ │                          │                           │
+ ▼                          ▼                           ▼
+┌─────────────┐     ┌────────────────┐          ┌────────────────┐
+│ DataLoader  │     │ FeatureExtractor│          │ TrendAnalyzer   │
+│（加载数据） │     │（计算特征）    │          │（趋势识别）   │
+└─────────────┘     └────────────────┘          └────────────────┘
+        │                        │                         │
+        ▼                        ▼                         ▼
+ ┌─────────────┐         ┌────────────────┐          ┌────────────────┐
+ │ 原始数据流  │──────▶  │ 特征数据流     │──────▶   │ 趋势阶段结果   │
+ └─────────────┘         └────────────────┘          └────────────────┘
+                                                              │
+                                                              ▼
+                                                  ┌─────────────────────┐
+                                                  │ RiskEvaluator（风险评估）│
+                                                  └─────────────────────┘
+                                                              │
+                                                              ▼
+                                                  ┌─────────────────────┐
+                                                  │ ReportGenerator（报告输出）│
+                                                  └─────────────────────┘
+                                                              │
+                                                              ▼
+                                                日志 / JSON / 飞书推送 / 可视化
+
+
+
+
+二、模块职责说明
+| 模块                   | 功能说明                               | 输入             | 输出                   |
+| -------------------- | ---------------------------------- | -------------- | -------------------- |
+| **Config（配置）**       | 从 `config.json` 加载币种列表、周期、阈值、输出策略等 | JSON文件         | 配置对象                 |
+| **TrendMonitor（主控）** | 负责系统调度、控制循环执行                      | 配置对象           | 调度结果                 |
+| **DataLoader**       | 从本地文件 / API 拉取持仓数据                 | symbol, period | OI + Value 序列        |
+| **FeatureExtractor** | 提取特征：OI增速、Value增速、资金强度Q、avg_price  | 原始数据           | 特征集（结构体）             |
+| **TrendAnalyzer**    | 基于特征判断趋势阶段（蓄势 / 加仓 / 加速 / 过热）      | 特征集            | 阶段标签                 |
+| **RiskEvaluator**    | 根据趋势强度评估风险                         | 趋势标签 + 特征      | 风险评分                 |
+| **ReportGenerator**  | 生成可视化或结构化报告                        | 分析结果 + 风险      | JSON / 控制台 / 文件 / 推送 |
+
+
+三、数据流向（从输入到输出）
+[config.json]
+     │
+     ▼
+TrendMonitor::run()
+     │
+     ▼
+DataLoader::load()               ← 拉取每个币种的 OI/Value 数据
+     │
+     ▼
+FeatureExtractor::compute()      ← 计算特征（ΔOI, ΔValue, Q, avg_price）
+     │
+     ▼
+TrendAnalyzer::detectPhase()     ← 判断当前阶段（蓄势 / 加仓 / 加速 / 过热）
+     │
+     ▼
+RiskEvaluator::evaluate()        ← 输出风险得分与建议
+     │
+     ▼
+ReportGenerator::writeReport()   ← 输出日志、JSON 或实时推送
+
+
+四、时间驱动逻辑（运行模式）
+while (true) {
+    // 1. 加载数据
+    auto data = dataLoader.load(symbol);
+
+    // 2. 提取特征
+    auto features = featureExtractor.compute(data);
+
+    // 3. 分析趋势
+    auto phase = trendAnalyzer.detectPhase(features);
+
+    // 4. 风险评估
+    auto risk = riskEvaluator.evaluate(features, phase);
+
+    // 5. 输出结果
+    reportGenerator.writeReport(symbol, features, phase, risk);
+
+    // 6. 等待下一个周期（例如每12小时一次）
+    sleep(config.refresh_interval);
+}
+
+
+五、模块之间的耦合关系（设计理念）
+| 模块               | 上游依赖             | 下游输出             | 耦合方式          |
+| ---------------- | ---------------- | ---------------- | ------------- |
+| DataLoader       | Config           | FeatureExtractor | 低耦合（通过结构体传递）  |
+| FeatureExtractor | DataLoader       | TrendAnalyzer    | 低耦合（独立计算）     |
+| TrendAnalyzer    | FeatureExtractor | RiskEvaluator    | 低耦合（使用统一特征结构） |
+| RiskEvaluator    | TrendAnalyzer    | ReportGenerator  | 松散耦合          |
+| ReportGenerator  | RiskEvaluator    | 外部输出             | 完全独立，可替换输出介质  |
+
+
+
+六、未来扩展方向
+| 功能方向       | 实现模块             | 示例                              |
+| ---------- | ---------------- | ------------------------------- |
+| 加入成交量数据    | DataLoader       | 从 Binance API 拉取 futures volume |
+| 增加更多特征     | FeatureExtractor | RSI、资金杠杆比                       |
+| 引入机器学习趋势分类 | TrendAnalyzer    | 轻量 SVM 或逻辑回归模型                  |
+| 自动风险报警     | RiskEvaluator    | 超过风险阈值发送通知                      |
+| 输出到图表      | ReportGenerator  | 生成 HTML 或 PNG 图形报告              |

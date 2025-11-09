@@ -1,0 +1,54 @@
+
+
+######
+mkdir build && cd build
+cmake ..
+make
+######
+
+######
+// ========== 模块总览 ==========
+class DataLoader;         // 数据加载与解析
+class FeatureExtractor;   // 指标特征提取
+class TrendAnalyzer;      // 趋势识别
+class RiskEvaluator;      // 风险评估
+class ReportGenerator;    // 报告生成与输出
+class TrendMonitor;       // 主控类（组合以上模块）
+######
+
+
+
+######
+trend_monitor/ 
+├── CMakeLists.txt 
+├── include/ 
+│   ├── DataLoader.h 
+│   ├── FeatureExtractor.h 
+│   ├── TrendAnalyzer.h 
+│   ├── RiskEvaluator.h 
+│   ├── ReportGenerator.h 
+│   └── TrendMonitor.h 
+├── src/ 
+│   ├── DataLoader.cpp 
+│   ├── FeatureExtractor.cpp 
+│   ├── TrendAnalyzer.cpp 
+│   ├── RiskEvaluator.cpp 
+│   ├── ReportGenerator.cpp 
+│   ├── TrendMonitor.cpp 
+│   └── main.cpp 
+└── third_party/ 
+    └── nlohmann/ 
+        └── json.hpp
+
+
+
+######
+模块	        	            功能说明
+DataLoader	            支持多数据源：不止 OI，可接入成交量、K线、资金流
+FeatureExtractor		提取数据特征，如涨跌幅、OI变化率、资金强度、波动率等
+TrendAnalyzer	        基于特征识别趋势阶段，可引入机器学习或指标模型
+RiskEvaluator		    对趋势阶段计算风险评分，如过热/潜在反转
+ReportGenerator		    生成输出报告（日志、JSON、或图表）
+TrendMonitor	        负责模块调度、周期执行、报警逻辑
+main.cpp	            负责加载配置并启动监控主循环
+
